@@ -29,6 +29,41 @@
       touch-action: pan-y;
     }
 
+    /* 화면 번쩍임 효과 */
+    .screen-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle, rgba(255, 242, 175, 0.9) 0%, rgba(255, 215, 0, 0.6) 100%);
+      z-index: 998;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+    }
+    .screen-flash.flash-active {
+      opacity: 1;
+      animation: flashAnim 0.6s ease-out forwards;
+    }
+
+    @keyframes flashAnim {
+      0% { opacity: 0.9; }
+      50% { opacity: 0.4; }
+      100% { opacity: 0; }
+    }
+
+    /* 폭죽 캔버스 */
+    #fireworks-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 999;
+      pointer-events: none;
+    }
+
     .cloud {
       position: absolute;
       background: rgba(255, 255, 255, 0.7);
@@ -69,7 +104,7 @@
       50% { transform: translateY(-6px); }
     }
 
-    /* 타이머 & 시도 횟수 바 */
+    /* 타이머 & 시도 횟수 */
     .status-bar {
       display: flex;
       gap: 16px;
@@ -488,7 +523,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      z-index: 1001;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
@@ -552,9 +587,21 @@
       padding: 12px 32px;
       border-radius: 50px;
     }
+
+    .modal-btn.new-game-btn {
+      background: #FED330;
+      color: #795548;
+      font-weight: 900;
+      text-shadow: 1px 1px 0 #FFEAA7;
+      box-shadow: 0 6px 0 #F7B731;
+    }
   </style>
 </head>
 <body>
+
+  <!-- 화면 번쩍임 및 폭죽 캔버스 -->
+  <div class="screen-flash" id="screen-flash"></div>
+  <canvas id="fireworks-canvas"></canvas>
 
   <div class="cloud cloud-1"></div>
   <div class="cloud cloud-2"></div>
@@ -631,13 +678,14 @@
     </div>
   </div>
 
+  <!-- 결과 모달 -->
   <div class="modal-overlay" id="result-modal">
     <div class="modal-content" id="modal-content-box">
       <div class="modal-title" id="modal-title-text">와아! 대결 끝! 🎈</div>
       <div class="modal-score-display" id="modal-score-val">0점</div>
       <div class="modal-record-box" id="modal-record-text">⏱️ 0초 | 🎯 1회 시도</div>
       <div class="modal-desc" id="modal-desc-text"></div>
-      <button class="modal-btn" onclick="closeModal()">다시 해볼래! 🔄</button>
+      <button class="modal-btn" id="modal-action-btn" onclick="handleModalAction()">다시 해볼래! 🔄</button>
     </div>
   </div>
 
@@ -665,6 +713,101 @@
     let touchDragData = null;
     let touchDragEl = null;
 
+    // --- 폭죽 파티클 애니메이션 엔진 ---
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let fireworksAnimationId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 3;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.015;
+        this.size = Math.random() * 4 + 3;
+        this.gravity = 0.15;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(this.alpha, 0);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function createFirework(x, y) {
+      const colors = ['#FF4757', '#2ED573', '#FFA502', '#1E90FF', '#FF69B4', '#FECA57', '#9B59B6'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      for (let i = 0; i < 45; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+    }
+
+    function launchCelebrationFireworks() {
+      stopFireworks();
+      const flashEl = document.getElementById('screen-flash');
+      flashEl.classList.remove('flash-active');
+      void flashEl.offsetWidth; // 리플로우 트리거
+      flashEl.classList.add('flash-active');
+
+      let bursts = 0;
+      const burstInterval = setInterval(() => {
+        const x = Math.random() * (canvas.width * 0.8) + canvas.width * 0.1;
+        const y = Math.random() * (canvas.height * 0.5) + canvas.height * 0.15;
+        createFirework(x, y);
+        playCuteSound('pop');
+        bursts++;
+        if (bursts >= 8) clearInterval(burstInterval);
+      }, 250);
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update();
+          particles[i].draw(ctx);
+          if (particles[i].alpha <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+        if (particles.length > 0 || bursts < 8) {
+          fireworksAnimationId = requestAnimationFrame(loop);
+        }
+      }
+      loop();
+    }
+
+    function stopFireworks() {
+      if (fireworksAnimationId) {
+        cancelAnimationFrame(fireworksAnimationId);
+        fireworksAnimationId = null;
+      }
+      particles = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // --- Web Audio API 사운드 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playCuteSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -857,6 +1000,7 @@
     }
 
     function dealCards() {
+      stopFireworks();
       playCuteSound('pop');
       isPlaying = false;
       isProblemStarted = false;
@@ -1125,7 +1269,7 @@
       selectedSlotIndex = null;
       clearBattleVisuals();
 
-      // [핵심 수정] 대결 버튼을 누르고 애니메이션이 시작되는 즉시 타이머 정지
+      // 애니메이션 시작 즉시 타이머 정지
       stopTimer();
 
       attemptsCount++;
@@ -1144,7 +1288,6 @@
       let currentTotal = 0;
       let winCount = 0, drawCount = 0, loseCount = 0;
 
-      // 대결 애니메이션 진행
       for (let i = 0; i < cardCount; i++) {
         const uEl = userElements[i];
         const eEl = enemyElements[i];
@@ -1188,6 +1331,7 @@
         const modalScore = document.getElementById('modal-score-val');
         const modalDesc = document.getElementById('modal-desc-text');
         const modalRecord = document.getElementById('modal-record-text');
+        const modalBtn = document.getElementById('modal-action-btn');
 
         const scoreFormatted = `${currentTotal > 0 ? '+' : ''}${currentTotal}점`;
         modalScore.textContent = scoreFormatted;
@@ -1196,12 +1340,19 @@
         if (currentTotal >= maxPossible) {
           hasClearedMax = true;
           playCuteSound('fanfare');
+          launchCelebrationFireworks(); // 번쩍임 및 폭죽 연출 실행
+
           modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
           modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
+          modalBtn.textContent = '🎲 새로운 문제 뽑기';
+          modalBtn.className = 'modal-btn new-game-btn';
         } else {
+          hasClearedMax = false;
           playCuteSound('win');
           modalTitle.textContent = '🎈 대결 결과 🎈';
           modalDesc.innerHTML = `⭐ 이김: ${winCount} | 🤝 비김: ${drawCount} | 💔 짐: ${loseCount}<br>(더 높은 <strong>${maxPossible > 0 ? '+' : ''}${maxPossible}점</strong>을 향해 카드를 다시 옮겨봐요!)`;
+          modalBtn.textContent = '🔄 다시 해볼래!';
+          modalBtn.className = 'modal-btn';
         }
 
         document.getElementById('result-modal').classList.add('active');
@@ -1214,12 +1365,19 @@
       checkPlayable();
     }
 
-    function closeModal() {
+    // 모달 확인 버튼 처리 로직 분기
+    function handleModalAction() {
       playCuteSound('pop');
       document.getElementById('result-modal').classList.remove('active');
-      // 최고점에 도달하지 못해 모달을 닫고 다시 배치할 때 타이머 다시 가동
-      if (!hasClearedMax && isProblemStarted) {
-        startTimer();
+
+      if (hasClearedMax) {
+        // 최고점 달성 후: 새로운 문제 바로 시작
+        dealCards();
+      } else {
+        // 최고점 미달성: 멈췄던 타이머를 즉시 다시 가동하여 누적 시간 기록
+        if (isProblemStarted) {
+          startTimer();
+        }
       }
     }
 
