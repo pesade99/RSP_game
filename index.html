@@ -352,7 +352,6 @@
       transform: translateY(-8px) scale(1.05);
     }
 
-    /* 드래그 중인 카드 (터치 시 화면을 따라다니는 클론) */
     .touch-dragging {
       position: fixed !important;
       z-index: 1000 !important;
@@ -647,7 +646,7 @@
     const SYMBOLS = { scissors: '✌️', rock: '✊', paper: '🖐️' };
     const LABELS = { scissors: '가위', rock: '바위', paper: '보' };
 
-    let cardCount = 5;
+    let cardCount = 4;
     let enemyCards = [];
     let initialUserCards = [];
     let basketCards = [];
@@ -663,7 +662,6 @@
     let hasClearedMax = false;
     let isTimerRunning = false;
 
-    // 터치 드래그 전역 변수
     let touchDragData = null;
     let touchDragEl = null;
 
@@ -749,14 +747,14 @@
         const opt = document.createElement('option');
         opt.value = i;
         opt.textContent = `${i}장`;
-        if (i === 5) opt.selected = true;
+        if (i === 4) opt.selected = true; // 기본 4장
         countSel.appendChild(opt);
       }
 
       const scoreSelects = [
-        { id: 'win-score', defaultVal: 2 },
-        { id: 'draw-score', defaultVal: 1 },
-        { id: 'lose-score', defaultVal: -2 }
+        { id: 'win-score', defaultVal: 2 },  // 이기면 2점
+        { id: 'draw-score', defaultVal: 1 }, // 비기면 1점
+        { id: 'lose-score', defaultVal: 0 }  // 지면 0점
       ];
 
       scoreSelects.forEach(conf => {
@@ -795,7 +793,6 @@
       `;
 
       if (side === 'user') {
-        // 1. 마우스 드래그 이벤트 (PC용)
         card.addEventListener('dragstart', (e) => {
           if (isPlaying) return;
           playCuteSound('pop');
@@ -805,7 +802,6 @@
           }));
         });
 
-        // 2. 터치 드래그 이벤트 (전자칠판/모바일/태블릿용)
         card.addEventListener('touchstart', (e) => {
           if (isPlaying) return;
           const touch = e.touches[0];
@@ -823,7 +819,6 @@
           const touch = e.touches[0];
           updateTouchPosition(touch);
 
-          // 드래그 위 슬롯 하이라이트
           const targetSlot = getSlotUnderTouch(touch);
           document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
           if (targetSlot) targetSlot.classList.add('drag-over');
