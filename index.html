@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>신나는 가위바위보 카드 놀이 🎈</title>
   <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Jua&display=swap" rel="stylesheet">
   <style>
@@ -12,6 +12,8 @@
       padding: 0;
       font-family: 'Jua', 'Gaegu', cursive, sans-serif;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
@@ -24,6 +26,7 @@
       padding: 20px 14px;
       position: relative;
       overflow-x: hidden;
+      touch-action: pan-y;
     }
 
     .cloud {
@@ -66,7 +69,7 @@
       50% { transform: translateY(-6px); }
     }
 
-    /* 타이머 & 시도 횟수 바 */
+    /* 타이머 & 시도 횟수 */
     .status-bar {
       display: flex;
       gap: 16px;
@@ -89,7 +92,7 @@
     .status-pill.timer { color: #FA8231; border-color: #FED330; }
     .status-pill.attempts { color: #3867D6; border-color: #45AAF2; }
 
-    /* 설정 바 */
+    /* 컨트롤 바 */
     .controls {
       background: #FFFFFF;
       padding: 14px 18px;
@@ -127,7 +130,7 @@
       cursor: pointer;
     }
 
-    /* 버튼 영역 */
+    /* 버튼 */
     .btn-wrap {
       display: flex;
       justify-content: center;
@@ -144,6 +147,7 @@
       border-radius: 50px;
       box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 18px rgba(0,0,0,0.1);
       transition: all 0.15s ease;
+      touch-action: manipulation;
     }
 
     button:hover { transform: translateY(-3px) scale(1.03); }
@@ -182,7 +186,7 @@
       box-shadow: none !important;
     }
 
-    /* 게임 판 */
+    /* 배틀 필드 */
     .battlefield {
       width: 100%;
       display: flex;
@@ -227,6 +231,7 @@
       overflow-x: auto;
       padding: 8px 4px;
       align-items: center;
+      touch-action: pan-x;
     }
 
     /* 슬롯 & 카드 */
@@ -242,6 +247,7 @@
       flex-shrink: 0;
       background: #F8FAFC;
       transition: all 0.2s ease;
+      touch-action: none;
     }
 
     .slot.drag-over {
@@ -250,7 +256,6 @@
       transform: scale(1.08);
     }
 
-    /* 카드 3D 플립 스타일 */
     .card {
       width: 72px;
       height: 105px;
@@ -258,6 +263,7 @@
       cursor: pointer;
       flex-shrink: 0;
       position: relative;
+      touch-action: none;
     }
 
     .card-inner {
@@ -287,20 +293,13 @@
       user-select: none;
     }
 
-    /* 카드 앞면 */
-    .card-front {
-      background: #FFFFFF;
-    }
+    .card-front { background: #FFFFFF; }
 
     .card .icon-wrap {
       font-size: 34px;
       line-height: 1;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-      transition: transform 0.2s;
-    }
-
-    .card:hover .icon-wrap {
-      transform: scale(1.2) rotate(6deg);
+      pointer-events: none;
     }
 
     .card .label {
@@ -309,9 +308,9 @@
       font-weight: bold;
       border-radius: 10px;
       padding: 1px 8px;
+      pointer-events: none;
     }
 
-    /* 카드 뒷면 (문제 숨김용) */
     .card-back {
       background: linear-gradient(135deg, #FF9FF3, #FECA57);
       border: 3px solid #FFF3B0;
@@ -320,7 +319,6 @@
     }
     .card-back .back-icon {
       font-size: 34px;
-      text-shadow: 1px 2px 0 rgba(0,0,0,0.15);
       animation: bounceBack 1.8s infinite ease-in-out;
     }
     .card-back .back-label {
@@ -335,7 +333,6 @@
       50% { transform: scale(1.15) rotate(5deg); }
     }
 
-    /* 진영별 카드 색상 */
     .card-enemy .card-front {
       background: #FFF0F0;
       border: 3px solid #FFA5A5;
@@ -353,6 +350,16 @@
       border-color: #FF9FF3 !important;
       box-shadow: 0 0 16px #FF9FF3;
       transform: translateY(-8px) scale(1.05);
+    }
+
+    /* 드래그 중인 카드 (터치 시 화면을 따라다니는 클론) */
+    .touch-dragging {
+      position: fixed !important;
+      z-index: 1000 !important;
+      pointer-events: none !important;
+      opacity: 0.85 !important;
+      transform: scale(1.1) !important;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.25) !important;
     }
 
     /* 바구니 영역 */
@@ -384,7 +391,7 @@
       font-weight: bold;
     }
 
-    /* 충돌 애니메이션 */
+    /* 애니메이션 */
     .card-enemy.clash {
       animation: enemyClashAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
@@ -407,7 +414,6 @@
       100% { transform: translateY(0); }
     }
 
-    /* 승부 결과 뱃지 */
     .card.win .card-front {
       border-color: #2ED573 !important;
       background: #EAFBF1 !important;
@@ -450,7 +456,6 @@
       z-index: 10;
     }
 
-    /* 점수판 */
     .result-board {
       margin-top: 18px;
       text-align: center;
@@ -558,7 +563,6 @@
   <div class="container">
     <h1>✌️ 얍! 가위바위보 카드 놀이 🖐️</h1>
 
-    <!-- 타이머 & 시도 횟수 -->
     <div class="status-bar">
       <div class="status-pill timer">
         <span>⏱️ 시간:</span>
@@ -570,7 +574,6 @@
       </div>
     </div>
 
-    <!-- 설정 옵션 -->
     <div class="controls">
       <div class="control-group">
         <label for="card-count">🎴 카드 수</label>
@@ -590,14 +593,12 @@
       </div>
     </div>
 
-    <!-- 버튼 바 -->
     <div class="btn-wrap">
       <button id="deal-btn" onclick="dealCards()">🎲 새 문제 뽑기</button>
       <button id="start-problem-btn" onclick="startProblem()">🚀 문제 시작!</button>
       <button id="play-btn" onclick="startPlay()" disabled>⚔️ 대결 확인!</button>
     </div>
 
-    <!-- 게임 판 -->
     <div class="battlefield">
       <div class="zone-box zone-enemy">
         <div class="zone-title">
@@ -610,13 +611,12 @@
       <div class="zone-box zone-user">
         <div class="zone-title">
           <span>🐰 내 카드 줄세우기</span>
-          <span class="hint">카드를 올려놓거나 서로 자리를 바꿔보세요!</span>
+          <span class="hint">터치하거나 끌어다 놓아 순서를 맞춰보세요!</span>
         </div>
         <div class="card-row" id="user-slots-row"></div>
       </div>
     </div>
 
-    <!-- 카드 바구니 -->
     <div class="basket-section">
       <div class="zone-title">
         <span>🧺 내 보물 바구니</span>
@@ -625,7 +625,6 @@
       <div class="basket-row" id="basket-row"></div>
     </div>
 
-    <!-- 점수판 -->
     <div class="result-board">
       <div>내 반짝 점수</div>
       <div class="total-score" id="total-score">0점</div>
@@ -633,7 +632,6 @@
     </div>
   </div>
 
-  <!-- 결과 모달 -->
   <div class="modal-overlay" id="result-modal">
     <div class="modal-content" id="modal-content-box">
       <div class="modal-title" id="modal-title-text">와아! 대결 끝! 🎈</div>
@@ -659,14 +657,16 @@
     let isProblemStarted = false;
     let selectedSlotIndex = null;
 
-    // 타이머 및 시도 횟수
     let attemptsCount = 0;
     let secondsElapsed = 0;
     let timerInterval = null;
     let hasClearedMax = false;
     let isTimerRunning = false;
 
-    // Web Audio API 효과음
+    // 터치 드래그 전역 변수
+    let touchDragData = null;
+    let touchDragEl = null;
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playCuteSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -795,6 +795,7 @@
       `;
 
       if (side === 'user') {
+        // 1. 마우스 드래그 이벤트 (PC용)
         card.addEventListener('dragstart', (e) => {
           if (isPlaying) return;
           playCuteSound('pop');
@@ -803,11 +804,63 @@
             fromSlot: fromSlotIndex
           }));
         });
+
+        // 2. 터치 드래그 이벤트 (전자칠판/모바일/태블릿용)
+        card.addEventListener('touchstart', (e) => {
+          if (isPlaying) return;
+          const touch = e.touches[0];
+          touchDragData = { cardId: cardObj.id, fromSlot: fromSlotIndex };
+          
+          touchDragEl = card.cloneNode(true);
+          touchDragEl.classList.add('touch-dragging');
+          document.body.appendChild(touchDragEl);
+          updateTouchPosition(touch);
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (e) => {
+          if (!touchDragEl) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          updateTouchPosition(touch);
+
+          // 드래그 위 슬롯 하이라이트
+          const targetSlot = getSlotUnderTouch(touch);
+          document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+          if (targetSlot) targetSlot.classList.add('drag-over');
+        }, { passive: false });
+
+        card.addEventListener('touchend', (e) => {
+          if (!touchDragEl) return;
+          const touch = e.changedTouches[0];
+          const targetSlot = getSlotUnderTouch(touch);
+          
+          document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+          if (targetSlot) {
+            const targetIdx = parseInt(targetSlot.dataset.slotIndex, 10);
+            handleDropToSlot(touchDragData, targetIdx);
+          }
+
+          if (touchDragEl && touchDragEl.parentNode) {
+            touchDragEl.parentNode.removeChild(touchDragEl);
+          }
+          touchDragEl = null;
+          touchDragData = null;
+        });
       }
       return card;
     }
 
-    // 새 문제 뽑기
+    function updateTouchPosition(touch) {
+      if (!touchDragEl) return;
+      touchDragEl.style.left = `${touch.clientX - 36}px`;
+      touchDragEl.style.top = `${touch.clientY - 52}px`;
+    }
+
+    function getSlotUnderTouch(touch) {
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      return el ? el.closest('.slot') : null;
+    }
+
     function dealCards() {
       playCuteSound('pop');
       isPlaying = false;
@@ -832,7 +885,6 @@
         initialUserCards.push({ ...userCard });
       }
 
-      // 곰돌이 카드는 처음에 물음표(뒤집힌 상태)로 시작
       renderEnemyRow(true);
       renderSlots();
       renderBasket();
@@ -843,16 +895,13 @@
       checkPlayable();
     }
 
-    // [문제 시작!] 버튼 클릭 시 카드 오픈 및 타이머 시작
     async function startProblem() {
       if (isProblemStarted) return;
       isProblemStarted = true;
       document.getElementById('start-problem-btn').disabled = true;
 
-      // 1. 타이머 가동
       startTimer();
 
-      // 2. 곰돌이 카드 3D 플립 애니메이션 (물음표 -> 앞면 오픈)
       const enemyCardEls = document.querySelectorAll('#enemy-row .card');
       for (let i = 0; i < enemyCardEls.length; i++) {
         enemyCardEls[i].classList.remove('flipped');
@@ -981,6 +1030,7 @@
     }
 
     function handleDropToSlot(data, targetSlotIndex) {
+      if (!data) return;
       clearBattleVisuals();
       selectedSlotIndex = null;
       playCuteSound('pop');
@@ -1031,7 +1081,6 @@
 
     function checkPlayable() {
       const allPlaced = placedCards.every(c => c !== null);
-      // 모든 카드가 배치되었고, 문제 시작 버튼이 눌렸을 때만 대결 확인 가능
       document.getElementById('play-btn').disabled = !allPlaced || !isProblemStarted || isPlaying;
     }
 
@@ -1076,7 +1125,6 @@
       return dp(0, 0);
     }
 
-    // [대결 확인!] 실행
     async function startPlay() {
       isPlaying = true;
       selectedSlotIndex = null;
@@ -1148,7 +1196,7 @@
 
         if (currentTotal >= maxPossible) {
           hasClearedMax = true;
-          stopTimer(); // 최고점 성공 시 타이머 멈춤
+          stopTimer();
           playCuteSound('fanfare');
           modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
           modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
