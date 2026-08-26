@@ -16,17 +16,21 @@
       -webkit-touch-callout: none;
     }
 
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     body {
       background: linear-gradient(135deg, #FFF9E6 0%, #E8F5E9 50%, #E1F5FE 100%);
-      color: #4A4A4A;
+      color: #333333;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 20px 14px;
+      padding: 8px 14px;
       position: relative;
-      overflow-x: hidden;
-      touch-action: pan-y;
     }
 
     /* 화면 번쩍임 효과 */
@@ -53,7 +57,6 @@
       100% { opacity: 0; }
     }
 
-    /* 폭죽 캔버스 */
     #fireworks-canvas {
       position: fixed;
       top: 0;
@@ -66,215 +69,179 @@
 
     .cloud {
       position: absolute;
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.6);
       border-radius: 50px;
       z-index: 0;
       filter: blur(2px);
       animation: floatCloud 18s infinite linear alternate;
     }
-    .cloud-1 { width: 140px; height: 50px; top: 30px; left: -30px; }
-    .cloud-2 { width: 200px; height: 70px; top: 180px; right: -40px; animation-duration: 24s; }
+    .cloud-1 { width: 120px; height: 40px; top: 15px; left: -20px; }
+    .cloud-2 { width: 160px; height: 50px; bottom: 20px; right: -30px; animation-duration: 24s; }
 
     @keyframes floatCloud {
       from { transform: translateX(0); }
-      to { transform: translateX(60px); }
+      to { transform: translateX(50px); }
     }
 
-    .container {
-      position: relative;
+    .title-header {
+      margin-bottom: 4px;
       z-index: 1;
-      width: 100%;
-      max-width: 860px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
 
     h1 {
-      font-size: 32px;
+      font-size: 26px;
       color: #FF6B8B;
-      text-shadow: 2px 3px 0 #FFE0E6, 4px 5px 0 rgba(0,0,0,0.06);
-      margin-bottom: 12px;
+      text-shadow: 2px 2px 0 #FFE0E6;
       text-align: center;
-      animation: bounceTitle 2s infinite ease-in-out;
     }
 
-    @keyframes bounceTitle {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+    /* 한 화면 핏 태블릿 그리드 레이아웃 */
+    .tablet-layout {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1060px;
+      height: calc(100vh - 60px);
+      max-height: 680px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px 14px;
     }
 
-    /* 타이머 & 시도 횟수 */
-    .status-bar {
+    /* ⬅️ 왼쪽 상단 그룹: 타이머 + 설정 */
+    .left-top-group {
+      grid-column: 1;
+      grid-row: 1;
       display: flex;
-      gap: 16px;
-      margin-bottom: 14px;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    .status-panel {
+      background: #FFFFFF;
+      padding: 8px 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border: 3px solid #FFE4E8;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
     }
 
     .status-pill {
-      background: #FFFFFF;
-      padding: 6px 16px;
-      border-radius: 30px;
+      background: #FFFDF0;
+      padding: 6px 12px;
+      border-radius: 12px;
       font-size: 17px;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      border: 2px solid #FFCCD5;
+      font-weight: 900;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-pill.timer { color: #FA8231; border: 2px solid #FED330; }
+    .status-pill.attempts { color: #3867D6; border: 2px solid #45AAF2; }
+
+    .settings-panel {
+      background: #FFFFFF;
+      padding: 8px 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border: 3px solid #FFE4E8;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 100px 1fr;
       align-items: center;
       gap: 6px;
     }
 
-    .status-pill.timer { color: #FA8231; border-color: #FED330; }
-    .status-pill.attempts { color: #3867D6; border-color: #45AAF2; }
-
-    /* 컨트롤 바 */
-    .controls {
-      background: #FFFFFF;
-      padding: 14px 18px;
-      border-radius: 24px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-      width: 100%;
-      box-shadow: 0 8px 24px rgba(255, 182, 193, 0.3);
-      border: 3px solid #FFE4E8;
-      margin-bottom: 16px;
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      text-align: center;
-    }
-
-    .control-group label {
-      font-size: 15px;
+    .control-row label {
+      font-size: 16px;
+      font-weight: bold;
       color: #8854D0;
+      text-align: left;
     }
 
-    .control-group select {
-      padding: 8px 10px;
+    .control-row select {
+      width: 100%;
+      padding: 4px 6px;
       background: #FFF0F5;
-      color: #4A4A4A;
+      color: #333;
       border: 2px solid #FFCCD5;
-      border-radius: 16px;
-      font-size: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
       text-align: center;
       outline: none;
       cursor: pointer;
     }
 
-    /* 버튼 */
-    .btn-wrap {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      cursor: pointer;
-      font-size: 17px;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 50px;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 18px rgba(0,0,0,0.1);
-      transition: all 0.15s ease;
-      touch-action: manipulation;
-    }
-
-    button:hover { transform: translateY(-3px) scale(1.03); }
-    button:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 rgba(0,0,0,0.12);
-    }
-
-    #deal-btn {
-      background: #48DBFB;
-      color: #FFFFFF;
-      text-shadow: 1px 1px 0 #0ABDE3;
-    }
-
-    #start-problem-btn {
-      background: #FED330;
-      color: #795548;
-      font-size: 18px;
-      font-weight: 900;
-      text-shadow: 1px 1px 0 #FFEAA7;
-    }
-
-    #play-btn {
-      background: #FF6B8B;
-      color: #FFFFFF;
-      text-shadow: 1px 1px 0 #EE5253;
-      font-size: 18px;
-    }
-
-    button:disabled {
-      background: #DCDDE1 !important;
-      color: #95A5A6 !important;
-      text-shadow: none !important;
-      cursor: not-allowed;
-      transform: none !important;
-      box-shadow: none !important;
-    }
-
-    /* 배틀 필드 */
+    /* ➡️ 우측 1행: 배틀필드 */
     .battlefield {
+      grid-column: 2;
+      grid-row: 1;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      justify-content: space-between;
       background: #FFFFFF;
-      padding: 22px 18px;
-      border-radius: 28px;
-      border: 4px solid #FFF3B0;
-      box-shadow: 0 10px 25px rgba(254, 202, 87, 0.25);
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 3px solid #FFF3B0;
+      box-shadow: 0 6px 16px rgba(254, 202, 87, 0.15);
+      gap: 6px;
     }
 
     .zone-box {
       background: #FAFAFA;
-      padding: 12px;
-      border-radius: 20px;
+      padding: 4px 8px;
+      border-radius: 14px;
     }
 
     .zone-title {
-      font-size: 17px;
-      margin-bottom: 8px;
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 3px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 8px;
+      padding: 0 2px;
+      line-height: 1.1;
     }
 
     .zone-enemy .zone-title { color: #FF6B6B; }
     .zone-user .zone-title { color: #10AC84; }
 
     .zone-title span.hint {
-      font-size: 13px;
-      color: #A4B0BE;
+      font-size: 14px;
+      color: #888;
       font-family: 'Gaegu', cursive;
+      font-weight: normal;
     }
 
     .card-row {
       display: flex;
       gap: 10px;
       justify-content: center;
-      min-height: 115px;
-      overflow-x: auto;
-      padding: 8px 4px;
       align-items: center;
+      min-height: 84px;
+      overflow-x: auto;
+      padding: 2px;
       touch-action: pan-x;
     }
 
     /* 슬롯 & 카드 */
     .slot {
-      width: 72px;
-      height: 105px;
-      border: 3px dashed #CAD5E2;
-      border-radius: 18px;
+      width: 64px;
+      height: 84px;
+      border: 2px dashed #CAD5E2;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -288,12 +255,12 @@
     .slot.drag-over {
       border-color: #10AC84;
       background: #E8F8F5;
-      transform: scale(1.08);
+      transform: scale(1.05);
     }
 
     .card {
-      width: 72px;
-      height: 105px;
+      width: 64px;
+      height: 84px;
       perspective: 1000px;
       cursor: pointer;
       flex-shrink: 0;
@@ -307,8 +274,8 @@
       position: relative;
       transform-style: preserve-3d;
       transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border-radius: 18px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      border-radius: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
     }
 
     .card.flipped .card-inner {
@@ -320,7 +287,7 @@
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      border-radius: 18px;
+      border-radius: 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -331,7 +298,7 @@
     .card-front { background: #FFFFFF; }
 
     .card .icon-wrap {
-      font-size: 34px;
+      font-size: 28px;
       line-height: 1;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
       pointer-events: none;
@@ -339,28 +306,27 @@
 
     .card .label {
       font-size: 13px;
-      margin-top: 4px;
-      font-weight: bold;
-      border-radius: 10px;
-      padding: 1px 8px;
+      margin-top: 2px;
+      font-weight: 900;
+      border-radius: 8px;
+      padding: 1px 6px;
       pointer-events: none;
     }
 
     .card-back {
       background: linear-gradient(135deg, #FF9FF3, #FECA57);
-      border: 3px solid #FFF3B0;
+      border: 2px solid #FFF3B0;
       transform: rotateY(180deg);
       color: #FFFFFF;
     }
     .card-back .back-icon {
-      font-size: 34px;
+      font-size: 26px;
       animation: bounceBack 1.8s infinite ease-in-out;
     }
     .card-back .back-label {
-      font-size: 11px;
-      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 900;
       color: #FFF;
-      font-weight: bold;
     }
 
     @keyframes bounceBack {
@@ -383,8 +349,8 @@
 
     .card.selected .card-front {
       border-color: #FF9FF3 !important;
-      box-shadow: 0 0 16px #FF9FF3;
-      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 0 12px #FF9FF3;
+      transform: translateY(-6px) scale(1.05);
     }
 
     .touch-dragging {
@@ -393,39 +359,158 @@
       pointer-events: none !important;
       opacity: 0.85 !important;
       transform: scale(1.1) !important;
-      box-shadow: 0 14px 28px rgba(0,0,0,0.25) !important;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
     }
 
-    /* 바구니 */
+    /* ⬇️ 바구니 영역 (우측 2행: 내 카드 주머니) */
     .basket-section {
+      grid-column: 2;
+      grid-row: 2;
       width: 100%;
-      margin-top: 16px;
       background: #FFF9E6;
-      border: 3px dashed #FED330;
-      border-radius: 24px;
-      padding: 16px;
+      border: 2px dashed #FED330;
+      border-radius: 16px;
+      padding: 4px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .basket-section .zone-title { color: #FA8231; }
+    .basket-section .zone-title {
+      color: #FA8231;
+      margin-bottom: 2px;
+      font-size: 32px;
+      font-weight: 900;
+    }
 
     .basket-row {
       display: flex;
       gap: 10px;
       justify-content: center;
-      min-height: 110px;
+      align-items: center;
+      min-height: 84px;
       overflow-x: auto;
-      padding: 6px;
+      padding: 2px;
       flex-wrap: wrap;
     }
 
     .basket-empty-msg {
       color: #F7B731;
-      font-size: 16px;
+      font-size: 15px;
       margin: auto;
-      font-weight: bold;
+      font-weight: 900;
     }
 
-    /* 애니메이션 */
+    /* ⬇️ 액션 버튼 그룹 */
+    .btn-panel {
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      font-size: 32px;
+      font-weight: 900;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.06);
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+      text-align: center;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.5px;
+    }
+
+    button:hover { transform: translateY(-2px); }
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+    }
+
+    #deal-btn {
+      background: #48DBFB;
+      color: #FFFFFF;
+      text-shadow: 2px 2px 0 #0ABDE3;
+    }
+
+    #start-problem-btn {
+      background: #FED330;
+      color: #795548;
+      text-shadow: 2px 2px 0 #FFEAA7;
+    }
+
+    #play-btn {
+      background: #FF6B8B;
+      color: #FFFFFF;
+      text-shadow: 2px 2px 0 #EE5253;
+    }
+
+    button:disabled {
+      background: #DCDDE1 !important;
+      color: #95A5A6 !important;
+      text-shadow: none !important;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ⬇️ 하단 점수판 */
+    .result-board {
+      grid-column: 2;
+      grid-row: 3;
+      background: #FFFFFF;
+      padding: 4px 16px;
+      border-radius: 14px;
+      border: 2px solid #C8D6E5;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      align-items: center;
+      gap: 12px;
+      height: 44px;
+    }
+
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 2px dashed #E2E8F0;
+      padding-right: 10px;
+    }
+
+    .score-badge span {
+      font-size: 15px;
+      font-weight: bold;
+      color: #64748B;
+    }
+
+    .total-score {
+      font-size: 26px;
+      font-weight: 900;
+      color: #FF6B8B;
+      line-height: 1;
+    }
+
+    .breakdown {
+      font-size: 16px;
+      font-weight: bold;
+      color: #555555;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 충돌 애니메이션 */
     .card-enemy.clash {
       animation: enemyClashAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
@@ -436,15 +521,15 @@
 
     @keyframes enemyClashAnim {
       0% { transform: translateY(0); }
-      45% { transform: translateY(38px) scale(1.25) rotate(-8deg); }
-      70% { transform: translateY(20px); }
+      45% { transform: translateY(26px) scale(1.18) rotate(-6deg); }
+      70% { transform: translateY(12px); }
       100% { transform: translateY(0); }
     }
 
     @keyframes userClashAnim {
       0% { transform: translateY(0); }
-      45% { transform: translateY(-38px) scale(1.25) rotate(8deg); }
-      70% { transform: translateY(-20px); }
+      45% { transform: translateY(-26px) scale(1.18) rotate(6deg); }
+      70% { transform: translateY(-12px); }
       100% { transform: translateY(0); }
     }
 
@@ -453,16 +538,17 @@
       background: #EAFBF1 !important;
     }
     .card.win::after {
-      content: '👑 이겼다!';
+      content: '👑 이김!';
       position: absolute;
-      top: -10px;
+      top: -8px;
       left: 50%;
       transform: translateX(-50%);
       background: #2ED573;
       color: #fff;
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: bold;
       padding: 1px 6px;
-      border-radius: 10px;
+      border-radius: 8px;
       z-index: 10;
     }
 
@@ -477,49 +563,28 @@
       background: #FFFDF0 !important;
     }
     .card.draw::after {
-      content: '🤝 비겼다!';
+      content: '🤝 비김!';
       position: absolute;
-      top: -10px;
+      top: -8px;
       left: 50%;
       transform: translateX(-50%);
       background: #FECA57;
       color: #fff;
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: bold;
       padding: 1px 6px;
-      border-radius: 10px;
+      border-radius: 8px;
       z-index: 10;
     }
 
-    .result-board {
-      margin-top: 18px;
-      text-align: center;
-      background: #FFFFFF;
-      padding: 14px 28px;
-      border-radius: 24px;
-      border: 3px solid #C8D6E5;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    }
-
-    .total-score {
-      font-size: 36px;
-      font-weight: 900;
-      color: #FF6B8B;
-      margin-top: 2px;
-    }
-
-    .breakdown {
-      font-size: 15px;
-      color: #8395A7;
-    }
-
-    /* 모달 */
+    /* 팝업 모달창 */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -527,7 +592,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
     }
 
     .modal-overlay.active {
@@ -537,119 +602,126 @@
 
     .modal-content {
       background: #FFFFFF;
-      border: 6px solid #FF9FF3;
-      padding: 32px 36px;
-      border-radius: 36px;
+      border: 12px solid #FF9FF3;
+      padding: 50px 60px;
+      border-radius: 48px;
       text-align: center;
-      box-shadow: 0 16px 40px rgba(255, 159, 243, 0.4);
-      transform: scale(0.7);
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      max-width: 90%;
-      min-width: 320px;
+      box-shadow: 0 24px 60px rgba(255, 159, 243, 0.5);
+      transform: scale(0.6);
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 90%;
+      max-width: 820px;
     }
 
     .modal-overlay.active .modal-content { transform: scale(1); }
 
     .modal-title {
-      font-size: 28px;
-      margin-bottom: 6px;
+      font-size: 58px;
+      margin-bottom: 12px;
       color: #FF6B8B;
+      text-shadow: 2px 3px 0 #FFE0E6;
     }
 
     .modal-score-display {
-      font-size: 44px;
-      font-weight: bold;
+      font-size: 96px;
+      font-weight: 900;
       color: #10AC84;
-      margin: 8px 0;
+      margin: 12px 0;
+      text-shadow: 2px 4px 0 rgba(0,0,0,0.06);
     }
 
     .modal-record-box {
       background: #FFF9E6;
-      border: 2px solid #FED330;
-      border-radius: 18px;
-      padding: 10px 16px;
-      margin-bottom: 16px;
-      font-size: 16px;
+      border: 4px solid #FED330;
+      border-radius: 24px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      font-size: 34px;
+      font-weight: 900;
       color: #FA8231;
     }
 
     .modal-desc {
-      font-size: 16px;
-      color: #576574;
-      margin-bottom: 20px;
+      font-size: 30px;
+      font-weight: bold;
+      color: #4A4A4A;
+      margin-bottom: 36px;
       line-height: 1.4;
     }
 
     .modal-btn {
       background: #FF6B8B;
       color: #fff;
-      font-size: 18px;
-      padding: 12px 32px;
-      border-radius: 50px;
+      font-size: 36px;
+      font-weight: 900;
+      padding: 18px 54px;
+      border-radius: 60px;
+      width: auto;
+      display: inline-block;
+      box-shadow: 0 8px 0 #EE5253, 0 12px 24px rgba(0,0,0,0.15);
     }
 
     .modal-btn.new-game-btn {
       background: #FED330;
       color: #795548;
-      font-weight: 900;
-      text-shadow: 1px 1px 0 #FFEAA7;
-      box-shadow: 0 6px 0 #F7B731;
+      text-shadow: 2px 2px 0 #FFEAA7;
+      box-shadow: 0 8px 0 #F7B731, 0 12px 24px rgba(0,0,0,0.15);
     }
   </style>
 </head>
 <body>
 
-  <!-- 화면 번쩍임 및 폭죽 캔버스 -->
   <div class="screen-flash" id="screen-flash"></div>
   <canvas id="fireworks-canvas"></canvas>
 
   <div class="cloud cloud-1"></div>
   <div class="cloud cloud-2"></div>
 
-  <div class="container">
+  <div class="title-header">
     <h1>✌️ 얍! 가위바위보 카드 놀이 🖐️</h1>
+  </div>
 
-    <div class="status-bar">
-      <div class="status-pill timer">
-        <span>⏱️ 시간:</span>
-        <span id="timer-display">0초</span>
+  <div class="tablet-layout">
+    
+    <!-- ⬅️ 왼쪽 상단 그룹: 타이머 + 설정 -->
+    <div class="left-top-group">
+      <div class="status-panel">
+        <div class="status-pill timer">
+          <span>⏱️ 시간</span>
+          <span id="timer-display">0초</span>
+        </div>
+        <div class="status-pill attempts">
+          <span>🎯 시도 횟수</span>
+          <span id="attempt-display">0회</span>
+        </div>
       </div>
-      <div class="status-pill attempts">
-        <span>🎯 시도:</span>
-        <span id="attempt-display">0회</span>
+
+      <div class="settings-panel">
+        <div class="control-row">
+          <label for="card-count">🎴 카드 수</label>
+          <select id="card-count" onchange="dealCards()"></select>
+        </div>
+        <div class="control-row">
+          <label for="win-score">⭐ 이기면</label>
+          <select id="win-score"></select>
+        </div>
+        <div class="control-row">
+          <label for="draw-score">🤝 비기면</label>
+          <select id="draw-score"></select>
+        </div>
+        <div class="control-row">
+          <label for="lose-score">💔 지면</label>
+          <select id="lose-score"></select>
+        </div>
       </div>
     </div>
 
-    <div class="controls">
-      <div class="control-group">
-        <label for="card-count">🎴 카드 수</label>
-        <select id="card-count" onchange="dealCards()"></select>
-      </div>
-      <div class="control-group">
-        <label for="win-score">⭐ 이기면</label>
-        <select id="win-score"></select>
-      </div>
-      <div class="control-group">
-        <label for="draw-score">🤝 비기면</label>
-        <select id="draw-score"></select>
-      </div>
-      <div class="control-group">
-        <label for="lose-score">💔 지면</label>
-        <select id="lose-score"></select>
-      </div>
-    </div>
-
-    <div class="btn-wrap">
-      <button id="deal-btn" onclick="dealCards()">🎲 새 문제 뽑기</button>
-      <button id="start-problem-btn" onclick="startProblem()">🚀 문제 시작!</button>
-      <button id="play-btn" onclick="startPlay()" disabled>⚔️ 대결 확인!</button>
-    </div>
-
+    <!-- ➡️ 우측 1행: 배틀필드 -->
     <div class="battlefield">
       <div class="zone-box zone-enemy">
         <div class="zone-title">
-          <span>🐻 곰돌이 친구 카드 (비밀 카드)</span>
-          <span class="hint">[문제 시작!]을 누르면 카드가 열려요!</span>
+          <span>🐻 곰돌이 친구 카드</span>
+          <span class="hint">[문제 시작!]을 누르면 열려요!</span>
         </div>
         <div class="card-row" id="enemy-row"></div>
       </div>
@@ -663,19 +735,31 @@
       </div>
     </div>
 
+    <!-- ⬅️ 좌측 2~3행: 폰트 2배(32px) 버튼 그룹 -->
+    <div class="btn-panel">
+      <button id="deal-btn" onclick="dealCards()">🎲 새 문제 뽑기</button>
+      <button id="start-problem-btn" onclick="startProblem()">🚀 문제 시작!</button>
+      <button id="play-btn" onclick="startPlay()" disabled>⚔️ 대결 확인!</button>
+    </div>
+
+    <!-- ➡️ 우측 2행: 내 카드 주머니 -->
     <div class="basket-section">
       <div class="zone-title">
-        <span>🧺 내 보물 바구니</span>
-        <span class="hint">카드를 쏙쏙 슬롯에 올려보세요!</span>
+        <span>🧺 내 카드 주머니</span>
+        <span class="hint">카드를 슬롯에 올려보세요!</span>
       </div>
       <div class="basket-row" id="basket-row"></div>
     </div>
 
+    <!-- ➡️ 우측 3행: 점수판 -->
     <div class="result-board">
-      <div>내 반짝 점수</div>
-      <div class="total-score" id="total-score">0점</div>
+      <div class="score-badge">
+        <span>내 점수:</span>
+        <div class="total-score" id="total-score">0점</div>
+      </div>
       <div class="breakdown" id="breakdown-text">[문제 시작!]을 눌러 곰돌이 카드를 확인하세요!</div>
     </div>
+
   </div>
 
   <!-- 결과 모달 -->
@@ -713,7 +797,7 @@
     let touchDragData = null;
     let touchDragEl = null;
 
-    // --- 폭죽 파티클 애니메이션 엔진 ---
+    // 폭죽 엔진
     const canvas = document.getElementById('fireworks-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -732,12 +816,12 @@
         this.y = y;
         this.color = color;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 8 + 3;
+        const speed = Math.random() * 9 + 4;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.alpha = 1;
-        this.decay = Math.random() * 0.015 + 0.015;
-        this.size = Math.random() * 4 + 3;
+        this.decay = Math.random() * 0.015 + 0.012;
+        this.size = Math.random() * 5 + 3;
         this.gravity = 0.15;
       }
       update() {
@@ -769,7 +853,7 @@
       stopFireworks();
       const flashEl = document.getElementById('screen-flash');
       flashEl.classList.remove('flash-active');
-      void flashEl.offsetWidth; // 리플로우 트리거
+      void flashEl.offsetWidth;
       flashEl.classList.add('flash-active');
 
       let bursts = 0;
@@ -807,7 +891,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    // --- Web Audio API 사운드 ---
+    // 사운드
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playCuteSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -990,8 +1074,8 @@
 
     function updateTouchPosition(touch) {
       if (!touchDragEl) return;
-      touchDragEl.style.left = `${touch.clientX - 36}px`;
-      touchDragEl.style.top = `${touch.clientY - 52}px`;
+      touchDragEl.style.left = `${touch.clientX - 32}px`;
+      touchDragEl.style.top = `${touch.clientY - 42}px`;
     }
 
     function getSlotUnderTouch(touch) {
@@ -1052,6 +1136,7 @@
       checkPlayable();
     }
 
+    // 카드 결과 효과 및 뱃지 초기화
     function clearBattleVisuals() {
       const allCards = document.querySelectorAll('.card');
       allCards.forEach(c => {
@@ -1269,7 +1354,6 @@
       selectedSlotIndex = null;
       clearBattleVisuals();
 
-      // 애니메이션 시작 즉시 타이머 정지
       stopTimer();
 
       attemptsCount++;
@@ -1335,12 +1419,12 @@
 
         const scoreFormatted = `${currentTotal > 0 ? '+' : ''}${currentTotal}점`;
         modalScore.textContent = scoreFormatted;
-        modalRecord.innerHTML = `⏱️ 걸린 시간: <strong>${secondsElapsed}초</strong> | 🎯 시도 횟수: <strong>${attemptsCount}번째</strong>`;
+        modalRecord.innerHTML = `⏱️ 걸린 시간: ${secondsElapsed}초 | 🎯 시도 횟수: ${attemptsCount}번째`;
 
         if (currentTotal >= maxPossible) {
           hasClearedMax = true;
           playCuteSound('fanfare');
-          launchCelebrationFireworks(); // 번쩍임 및 폭죽 연출 실행
+          launchCelebrationFireworks();
 
           modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
           modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
@@ -1365,16 +1449,17 @@
       checkPlayable();
     }
 
-    // 모달 확인 버튼 처리 로직 분기
+    // 모달 확인 버튼 처리 (다시 해볼래 클릭 시 카드 상태 초기화)
     function handleModalAction() {
       playCuteSound('pop');
       document.getElementById('result-modal').classList.remove('active');
 
       if (hasClearedMax) {
-        // 최고점 달성 후: 새로운 문제 바로 시작
         dealCards();
       } else {
-        // 최고점 미달성: 멈췄던 타이머를 즉시 다시 가동하여 누적 시간 기록
+        // [수정 핵심] 곰돌이 및 내 카드에 붙은 이김/비김/짐 뱃지 및 색상 즉시 제거
+        clearBattleVisuals();
+
         if (isProblemStarted) {
           startTimer();
         }
