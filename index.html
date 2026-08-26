@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>신나는 가위바위보 카드 놀이 🎈</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Jua&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Jua', 'Gaegu', cursive, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #FFF9E6 0%, #E8F5E9 50%, #E1F5FE 100%);
+      color: #4A4A4A;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 14px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50px;
+      z-index: 0;
+      filter: blur(2px);
+      animation: floatCloud 18s infinite linear alternate;
+    }
+    .cloud-1 { width: 140px; height: 50px; top: 30px; left: -30px; }
+    .cloud-2 { width: 200px; height: 70px; top: 180px; right: -40px; animation-duration: 24s; }
+
+    @keyframes floatCloud {
+      from { transform: translateX(0); }
+      to { transform: translateX(60px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #FF6B8B;
+      text-shadow: 2px 3px 0 #FFE0E6, 4px 5px 0 rgba(0,0,0,0.06);
+      margin-bottom: 12px;
+      text-align: center;
+      animation: bounceTitle 2s infinite ease-in-out;
+    }
+
+    @keyframes bounceTitle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* 타이머 & 시도 횟수 바 */
+    .status-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .status-pill {
+      background: #FFFFFF;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 17px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border: 2px solid #FFCCD5;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill.timer { color: #FA8231; border-color: #FED330; }
+    .status-pill.attempts { color: #3867D6; border-color: #45AAF2; }
+
+    /* 설정 바 */
+    .controls {
+      background: #FFFFFF;
+      padding: 14px 18px;
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(255, 182, 193, 0.3);
+      border: 3px solid #FFE4E8;
+      margin-bottom: 16px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .control-group label {
+      font-size: 15px;
+      color: #8854D0;
+    }
+
+    .control-group select {
+      padding: 8px 10px;
+      background: #FFF0F5;
+      color: #4A4A4A;
+      border: 2px solid #FFCCD5;
+      border-radius: 16px;
+      font-size: 15px;
+      text-align: center;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* 버튼 영역 */
+    .btn-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      font-size: 17px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 18px rgba(0,0,0,0.1);
+      transition: all 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-3px) scale(1.03); }
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+    }
+
+    #deal-btn {
+      background: #48DBFB;
+      color: #FFFFFF;
+      text-shadow: 1px 1px 0 #0ABDE3;
+    }
+
+    #start-problem-btn {
+      background: #FED330;
+      color: #795548;
+      font-size: 18px;
+      font-weight: 900;
+      text-shadow: 1px 1px 0 #FFEAA7;
+    }
+
+    #play-btn {
+      background: #FF6B8B;
+      color: #FFFFFF;
+      text-shadow: 1px 1px 0 #EE5253;
+      font-size: 18px;
+    }
+
+    button:disabled {
+      background: #DCDDE1 !important;
+      color: #95A5A6 !important;
+      text-shadow: none !important;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* 게임 판 */
+    .battlefield {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #FFFFFF;
+      padding: 22px 18px;
+      border-radius: 28px;
+      border: 4px solid #FFF3B0;
+      box-shadow: 0 10px 25px rgba(254, 202, 87, 0.25);
+    }
+
+    .zone-box {
+      background: #FAFAFA;
+      padding: 12px;
+      border-radius: 20px;
+    }
+
+    .zone-title {
+      font-size: 17px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    .zone-enemy .zone-title { color: #FF6B6B; }
+    .zone-user .zone-title { color: #10AC84; }
+
+    .zone-title span.hint {
+      font-size: 13px;
+      color: #A4B0BE;
+      font-family: 'Gaegu', cursive;
+    }
+
+    .card-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      min-height: 115px;
+      overflow-x: auto;
+      padding: 8px 4px;
+      align-items: center;
+    }
+
+    /* 슬롯 & 카드 */
+    .slot {
+      width: 72px;
+      height: 105px;
+      border: 3px dashed #CAD5E2;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+      background: #F8FAFC;
+      transition: all 0.2s ease;
+    }
+
+    .slot.drag-over {
+      border-color: #10AC84;
+      background: #E8F8F5;
+      transform: scale(1.08);
+    }
+
+    /* 카드 3D 플립 스타일 */
+    .card {
+      width: 72px;
+      height: 105px;
+      perspective: 1000px;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border-radius: 18px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    /* 카드 앞면 */
+    .card-front {
+      background: #FFFFFF;
+    }
+
+    .card .icon-wrap {
+      font-size: 34px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: transform 0.2s;
+    }
+
+    .card:hover .icon-wrap {
+      transform: scale(1.2) rotate(6deg);
+    }
+
+    .card .label {
+      font-size: 13px;
+      margin-top: 4px;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 1px 8px;
+    }
+
+    /* 카드 뒷면 (문제 숨김용) */
+    .card-back {
+      background: linear-gradient(135deg, #FF9FF3, #FECA57);
+      border: 3px solid #FFF3B0;
+      transform: rotateY(180deg);
+      color: #FFFFFF;
+    }
+    .card-back .back-icon {
+      font-size: 34px;
+      text-shadow: 1px 2px 0 rgba(0,0,0,0.15);
+      animation: bounceBack 1.8s infinite ease-in-out;
+    }
+    .card-back .back-label {
+      font-size: 11px;
+      margin-top: 2px;
+      color: #FFF;
+      font-weight: bold;
+    }
+
+    @keyframes bounceBack {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15) rotate(5deg); }
+    }
+
+    /* 진영별 카드 색상 */
+    .card-enemy .card-front {
+      background: #FFF0F0;
+      border: 3px solid #FFA5A5;
+    }
+    .card-enemy .label { color: #EE5253; background: #FFE3E3; }
+    .card-enemy { cursor: default; }
+
+    .card-user .card-front {
+      background: #F0FFF4;
+      border: 3px solid #81ECEC;
+    }
+    .card-user .label { color: #00B894; background: #DFF9FB; }
+
+    .card.selected .card-front {
+      border-color: #FF9FF3 !important;
+      box-shadow: 0 0 16px #FF9FF3;
+      transform: translateY(-8px) scale(1.05);
+    }
+
+    /* 바구니 영역 */
+    .basket-section {
+      width: 100%;
+      margin-top: 16px;
+      background: #FFF9E6;
+      border: 3px dashed #FED330;
+      border-radius: 24px;
+      padding: 16px;
+    }
+
+    .basket-section .zone-title { color: #FA8231; }
+
+    .basket-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      min-height: 110px;
+      overflow-x: auto;
+      padding: 6px;
+      flex-wrap: wrap;
+    }
+
+    .basket-empty-msg {
+      color: #F7B731;
+      font-size: 16px;
+      margin: auto;
+      font-weight: bold;
+    }
+
+    /* 충돌 애니메이션 */
+    .card-enemy.clash {
+      animation: enemyClashAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .card-user.clash {
+      animation: userClashAnim 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes enemyClashAnim {
+      0% { transform: translateY(0); }
+      45% { transform: translateY(38px) scale(1.25) rotate(-8deg); }
+      70% { transform: translateY(20px); }
+      100% { transform: translateY(0); }
+    }
+
+    @keyframes userClashAnim {
+      0% { transform: translateY(0); }
+      45% { transform: translateY(-38px) scale(1.25) rotate(8deg); }
+      70% { transform: translateY(-20px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* 승부 결과 뱃지 */
+    .card.win .card-front {
+      border-color: #2ED573 !important;
+      background: #EAFBF1 !important;
+    }
+    .card.win::after {
+      content: '👑 이겼다!';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2ED573;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    .card.lose .card-front {
+      border-color: #FF6B81 !important;
+      background: #FFF0F2 !important;
+      opacity: 0.7;
+    }
+
+    .card.draw .card-front {
+      border-color: #FECA57 !important;
+      background: #FFFDF0 !important;
+    }
+    .card.draw::after {
+      content: '🤝 비겼다!';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FECA57;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    /* 점수판 */
+    .result-board {
+      margin-top: 18px;
+      text-align: center;
+      background: #FFFFFF;
+      padding: 14px 28px;
+      border-radius: 24px;
+      border: 3px solid #C8D6E5;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .total-score {
+      font-size: 36px;
+      font-weight: 900;
+      color: #FF6B8B;
+      margin-top: 2px;
+    }
+
+    .breakdown {
+      font-size: 15px;
+      color: #8395A7;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #FFFFFF;
+      border: 6px solid #FF9FF3;
+      padding: 32px 36px;
+      border-radius: 36px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(255, 159, 243, 0.4);
+      transform: scale(0.7);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      max-width: 90%;
+      min-width: 320px;
+    }
+
+    .modal-overlay.active .modal-content { transform: scale(1); }
+
+    .modal-title {
+      font-size: 28px;
+      margin-bottom: 6px;
+      color: #FF6B8B;
+    }
+
+    .modal-score-display {
+      font-size: 44px;
+      font-weight: bold;
+      color: #10AC84;
+      margin: 8px 0;
+    }
+
+    .modal-record-box {
+      background: #FFF9E6;
+      border: 2px solid #FED330;
+      border-radius: 18px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      font-size: 16px;
+      color: #FA8231;
+    }
+
+    .modal-desc {
+      font-size: 16px;
+      color: #576574;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .modal-btn {
+      background: #FF6B8B;
+      color: #fff;
+      font-size: 18px;
+      padding: 12px 32px;
+      border-radius: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+
+  <div class="container">
+    <h1>✌️ 얍! 가위바위보 카드 놀이 🖐️</h1>
+
+    <!-- 타이머 & 시도 횟수 -->
+    <div class="status-bar">
+      <div class="status-pill timer">
+        <span>⏱️ 시간:</span>
+        <span id="timer-display">0초</span>
+      </div>
+      <div class="status-pill attempts">
+        <span>🎯 시도:</span>
+        <span id="attempt-display">0회</span>
+      </div>
+    </div>
+
+    <!-- 설정 옵션 -->
+    <div class="controls">
+      <div class="control-group">
+        <label for="card-count">🎴 카드 수</label>
+        <select id="card-count" onchange="dealCards()"></select>
+      </div>
+      <div class="control-group">
+        <label for="win-score">⭐ 이기면</label>
+        <select id="win-score"></select>
+      </div>
+      <div class="control-group">
+        <label for="draw-score">🤝 비기면</label>
+        <select id="draw-score"></select>
+      </div>
+      <div class="control-group">
+        <label for="lose-score">💔 지면</label>
+        <select id="lose-score"></select>
+      </div>
+    </div>
+
+    <!-- 버튼 바 -->
+    <div class="btn-wrap">
+      <button id="deal-btn" onclick="dealCards()">🎲 새 문제 뽑기</button>
+      <button id="start-problem-btn" onclick="startProblem()">🚀 문제 시작!</button>
+      <button id="play-btn" onclick="startPlay()" disabled>⚔️ 대결 확인!</button>
+    </div>
+
+    <!-- 게임 판 -->
+    <div class="battlefield">
+      <div class="zone-box zone-enemy">
+        <div class="zone-title">
+          <span>🐻 곰돌이 친구 카드 (비밀 카드)</span>
+          <span class="hint">[문제 시작!]을 누르면 카드가 열려요!</span>
+        </div>
+        <div class="card-row" id="enemy-row"></div>
+      </div>
+
+      <div class="zone-box zone-user">
+        <div class="zone-title">
+          <span>🐰 내 카드 줄세우기</span>
+          <span class="hint">카드를 올려놓거나 서로 자리를 바꿔보세요!</span>
+        </div>
+        <div class="card-row" id="user-slots-row"></div>
+      </div>
+    </div>
+
+    <!-- 카드 바구니 -->
+    <div class="basket-section">
+      <div class="zone-title">
+        <span>🧺 내 보물 바구니</span>
+        <span class="hint">카드를 쏙쏙 슬롯에 올려보세요!</span>
+      </div>
+      <div class="basket-row" id="basket-row"></div>
+    </div>
+
+    <!-- 점수판 -->
+    <div class="result-board">
+      <div>내 반짝 점수</div>
+      <div class="total-score" id="total-score">0점</div>
+      <div class="breakdown" id="breakdown-text">[문제 시작!]을 눌러 곰돌이 카드를 확인하세요!</div>
+    </div>
+  </div>
+
+  <!-- 결과 모달 -->
+  <div class="modal-overlay" id="result-modal">
+    <div class="modal-content" id="modal-content-box">
+      <div class="modal-title" id="modal-title-text">와아! 대결 끝! 🎈</div>
+      <div class="modal-score-display" id="modal-score-val">0점</div>
+      <div class="modal-record-box" id="modal-record-text">⏱️ 0초 | 🎯 1회 시도</div>
+      <div class="modal-desc" id="modal-desc-text"></div>
+      <button class="modal-btn" onclick="closeModal()">다시 해볼래! 🔄</button>
+    </div>
+  </div>
+
+  <script>
+    const TYPES = ['scissors', 'rock', 'paper'];
+    const SYMBOLS = { scissors: '✌️', rock: '✊', paper: '🖐️' };
+    const LABELS = { scissors: '가위', rock: '바위', paper: '보' };
+
+    let cardCount = 5;
+    let enemyCards = [];
+    let initialUserCards = [];
+    let basketCards = [];
+    let placedCards = [];
+    let cardIdCounter = 0;
+    let isPlaying = false;
+    let isProblemStarted = false;
+    let selectedSlotIndex = null;
+
+    // 타이머 및 시도 횟수
+    let attemptsCount = 0;
+    let secondsElapsed = 0;
+    let timerInterval = null;
+    let hasClearedMax = false;
+    let isTimerRunning = false;
+
+    // Web Audio API 효과음
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playCuteSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+      if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'flip') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(650, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } else if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.08);
+        osc.frequency.setValueAtTime(783.99, now + 0.16);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      } else if (type === 'fanfare') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(freq, now + idx * 0.09);
+          g.gain.setValueAtTime(0.25, now + idx * 0.09);
+          g.gain.linearRampToValueAtTime(0, now + idx * 0.09 + 0.15);
+          o.start(now + idx * 0.09);
+          o.stop(now + idx * 0.09 + 0.15);
+        });
+      }
+    }
+
+    function startTimer() {
+      if (!isTimerRunning && !hasClearedMax) {
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+          if (!hasClearedMax) {
+            secondsElapsed++;
+            document.getElementById('timer-display').textContent = `${secondsElapsed}초`;
+          }
+        }, 1000);
+      }
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      isTimerRunning = false;
+    }
+
+    function resetTimer() {
+      stopTimer();
+      secondsElapsed = 0;
+      document.getElementById('timer-display').textContent = '0초';
+    }
+
+    function initSelectors() {
+      const countSel = document.getElementById('card-count');
+      for (let i = 1; i <= 10; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${i}장`;
+        if (i === 5) opt.selected = true;
+        countSel.appendChild(opt);
+      }
+
+      const scoreSelects = [
+        { id: 'win-score', defaultVal: 2 },
+        { id: 'draw-score', defaultVal: 1 },
+        { id: 'lose-score', defaultVal: -2 }
+      ];
+
+      scoreSelects.forEach(conf => {
+        const el = document.getElementById(conf.id);
+        for (let s = -3; s <= 3; s++) {
+          const opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = (s > 0 ? `+${s}` : `${s}`) + '점';
+          if (s === conf.defaultVal) opt.selected = true;
+          el.appendChild(opt);
+        }
+      });
+    }
+
+    function getRandomType() {
+      return TYPES[Math.floor(Math.random() * TYPES.length)];
+    }
+
+    function createCardElement(cardObj, side, fromSlotIndex = null, isFlipped = false) {
+      const card = document.createElement('div');
+      card.className = `card card-${side} ${isFlipped ? 'flipped' : ''}`;
+      card.id = `card-${cardObj.id || Math.random()}`;
+      card.draggable = (side === 'user' && !isPlaying);
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="icon-wrap">${SYMBOLS[cardObj.type]}</div>
+            <div class="label">${LABELS[cardObj.type]}</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="back-icon">❓</div>
+            <div class="back-label">비밀카드</div>
+          </div>
+        </div>
+      `;
+
+      if (side === 'user') {
+        card.addEventListener('dragstart', (e) => {
+          if (isPlaying) return;
+          playCuteSound('pop');
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            cardId: cardObj.id,
+            fromSlot: fromSlotIndex
+          }));
+        });
+      }
+      return card;
+    }
+
+    // 새 문제 뽑기
+    function dealCards() {
+      playCuteSound('pop');
+      isPlaying = false;
+      isProblemStarted = false;
+      hasClearedMax = false;
+      selectedSlotIndex = null;
+      attemptsCount = 0;
+      document.getElementById('attempt-display').textContent = '0회';
+      resetTimer();
+
+      cardCount = parseInt(document.getElementById('card-count').value, 10);
+      enemyCards = [];
+      basketCards = [];
+      initialUserCards = [];
+      placedCards = new Array(cardCount).fill(null);
+      cardIdCounter = 0;
+
+      for (let i = 0; i < cardCount; i++) {
+        enemyCards.push({ id: `e-${i}`, type: getRandomType() });
+        const userCard = { id: `u-${++cardIdCounter}`, type: getRandomType() };
+        basketCards.push(userCard);
+        initialUserCards.push({ ...userCard });
+      }
+
+      // 곰돌이 카드는 처음에 물음표(뒤집힌 상태)로 시작
+      renderEnemyRow(true);
+      renderSlots();
+      renderBasket();
+
+      document.getElementById('start-problem-btn').disabled = false;
+      document.getElementById('total-score').textContent = '0점';
+      document.getElementById('breakdown-text').textContent = '[문제 시작!]을 눌러 곰돌이 카드를 확인하세요!';
+      checkPlayable();
+    }
+
+    // [문제 시작!] 버튼 클릭 시 카드 오픈 및 타이머 시작
+    async function startProblem() {
+      if (isProblemStarted) return;
+      isProblemStarted = true;
+      document.getElementById('start-problem-btn').disabled = true;
+
+      // 1. 타이머 가동
+      startTimer();
+
+      // 2. 곰돌이 카드 3D 플립 애니메이션 (물음표 -> 앞면 오픈)
+      const enemyCardEls = document.querySelectorAll('#enemy-row .card');
+      for (let i = 0; i < enemyCardEls.length; i++) {
+        enemyCardEls[i].classList.remove('flipped');
+        playCuteSound('flip');
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      document.getElementById('breakdown-text').textContent = '카드를 알맞게 배치하고 [대결 확인!]을 눌러보세요!';
+      checkPlayable();
+    }
+
+    function clearBattleVisuals() {
+      const allCards = document.querySelectorAll('.card');
+      allCards.forEach(c => {
+        c.classList.remove('clash', 'win', 'lose', 'draw');
+      });
+    }
+
+    function renderEnemyRow(isFlipped = false) {
+      const enemyRow = document.getElementById('enemy-row');
+      enemyRow.innerHTML = '';
+      enemyCards.forEach(card => {
+        enemyRow.appendChild(createCardElement(card, 'enemy', null, isFlipped));
+      });
+    }
+
+    function renderSlots() {
+      const slotsRow = document.getElementById('user-slots-row');
+      slotsRow.innerHTML = '';
+
+      for (let i = 0; i < cardCount; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.slotIndex = i;
+
+        slot.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (!isPlaying) slot.classList.add('drag-over');
+        });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drag-over');
+          if (isPlaying) return;
+
+          const rawData = e.dataTransfer.getData('text/plain');
+          if (!rawData) return;
+          handleDropToSlot(JSON.parse(rawData), i);
+        });
+
+        const placed = placedCards[i];
+        if (placed) {
+          const cardEl = createCardElement(placed, 'user', i, false);
+          if (selectedSlotIndex === i) {
+            cardEl.classList.add('selected');
+          }
+
+          cardEl.onclick = (e) => {
+            e.stopPropagation();
+            if (isPlaying) return;
+            handleSlotCardClick(i);
+          };
+          slot.appendChild(cardEl);
+        } else {
+          slot.onclick = () => {
+            if (isPlaying) return;
+            if (selectedSlotIndex !== null) {
+              playCuteSound('pop');
+              placedCards[i] = placedCards[selectedSlotIndex];
+              placedCards[selectedSlotIndex] = null;
+              selectedSlotIndex = null;
+              clearBattleVisuals();
+              renderSlots();
+              checkPlayable();
+            }
+          };
+        }
+
+        slotsRow.appendChild(slot);
+      }
+    }
+
+    function renderBasket() {
+      const basketRow = document.getElementById('basket-row');
+      basketRow.innerHTML = '';
+
+      if (basketCards.length === 0) {
+        basketRow.innerHTML = '<div class="basket-empty-msg">🎉 모든 카드를 다 올렸어요! 대결 확인을 눌러봐요!</div>';
+        return;
+      }
+
+      basketCards.forEach(card => {
+        const cardEl = createCardElement(card, 'user', null, false);
+        cardEl.onclick = () => {
+          if (isPlaying) return;
+          selectedSlotIndex = null;
+          const firstEmpty = placedCards.findIndex(c => c === null);
+          if (firstEmpty !== -1) {
+            playCuteSound('pop');
+            placeCardFromBasket(card.id, firstEmpty);
+          }
+        };
+        basketRow.appendChild(cardEl);
+      });
+    }
+
+    function handleSlotCardClick(slotIndex) {
+      clearBattleVisuals();
+      playCuteSound('pop');
+
+      if (selectedSlotIndex === null) {
+        selectedSlotIndex = slotIndex;
+      } else if (selectedSlotIndex === slotIndex) {
+        removeCardFromSlot(slotIndex);
+        selectedSlotIndex = null;
+      } else {
+        const temp = placedCards[slotIndex];
+        placedCards[slotIndex] = placedCards[selectedSlotIndex];
+        placedCards[selectedSlotIndex] = temp;
+        selectedSlotIndex = null;
+      }
+
+      renderSlots();
+      renderBasket();
+      checkPlayable();
+    }
+
+    function handleDropToSlot(data, targetSlotIndex) {
+      clearBattleVisuals();
+      selectedSlotIndex = null;
+      playCuteSound('pop');
+
+      const { cardId, fromSlot } = data;
+      if (fromSlot !== null && fromSlot !== undefined) {
+        const temp = placedCards[targetSlotIndex];
+        placedCards[targetSlotIndex] = placedCards[fromSlot];
+        placedCards[fromSlot] = temp;
+      } else {
+        placeCardFromBasket(cardId, targetSlotIndex);
+      }
+
+      renderSlots();
+      renderBasket();
+      checkPlayable();
+    }
+
+    function placeCardFromBasket(cardId, targetSlotIndex) {
+      const basketIdx = basketCards.findIndex(c => c.id === cardId);
+      if (basketIdx === -1) return;
+
+      const incomingCard = basketCards[basketIdx];
+      basketCards.splice(basketIdx, 1);
+
+      if (placedCards[targetSlotIndex] !== null) {
+        basketCards.push(placedCards[targetSlotIndex]);
+      }
+
+      placedCards[targetSlotIndex] = incomingCard;
+      renderSlots();
+      renderBasket();
+      checkPlayable();
+    }
+
+    function removeCardFromSlot(slotIndex) {
+      const card = placedCards[slotIndex];
+      if (!card) return;
+
+      clearBattleVisuals();
+      placedCards[slotIndex] = null;
+      basketCards.push(card);
+
+      renderSlots();
+      renderBasket();
+      checkPlayable();
+    }
+
+    function checkPlayable() {
+      const allPlaced = placedCards.every(c => c !== null);
+      // 모든 카드가 배치되었고, 문제 시작 버튼이 눌렸을 때만 대결 확인 가능
+      document.getElementById('play-btn').disabled = !allPlaced || !isProblemStarted || isPlaying;
+    }
+
+    function checkOutcome(userType, enemyType) {
+      if (userType === enemyType) return 'draw';
+      if (
+        (userType === 'rock' && enemyType === 'scissors') ||
+        (userType === 'scissors' && enemyType === 'paper') ||
+        (userType === 'paper' && enemyType === 'rock')
+      ) {
+        return 'win';
+      }
+      return 'lose';
+    }
+
+    function getCardPoints(userType, enemyType, winPts, drawPts, losePts) {
+      const outcome = checkOutcome(userType, enemyType);
+      if (outcome === 'win') return winPts;
+      if (outcome === 'draw') return drawPts;
+      return losePts;
+    }
+
+    function calculateMaxPossibleScore(winPts, drawPts, losePts) {
+      const n = cardCount;
+      const memo = {};
+
+      function dp(enemyIdx, usedMask) {
+        if (enemyIdx === n) return 0;
+        const key = `${enemyIdx}-${usedMask}`;
+        if (memo[key] !== undefined) return memo[key];
+
+        let maxScore = -Infinity;
+        for (let i = 0; i < n; i++) {
+          if (!(usedMask & (1 << i))) {
+            const score = getCardPoints(initialUserCards[i].type, enemyCards[enemyIdx].type, winPts, drawPts, losePts);
+            maxScore = Math.max(maxScore, score + dp(enemyIdx + 1, usedMask | (1 << i)));
+          }
+        }
+        return memo[key] = maxScore;
+      }
+
+      return dp(0, 0);
+    }
+
+    // [대결 확인!] 실행
+    async function startPlay() {
+      isPlaying = true;
+      selectedSlotIndex = null;
+      clearBattleVisuals();
+
+      attemptsCount++;
+      document.getElementById('attempt-display').textContent = `${attemptsCount}회`;
+
+      document.getElementById('deal-btn').disabled = true;
+      document.getElementById('play-btn').disabled = true;
+
+      const winPts = parseInt(document.getElementById('win-score').value, 10);
+      const drawPts = parseInt(document.getElementById('draw-score').value, 10);
+      const losePts = parseInt(document.getElementById('lose-score').value, 10);
+
+      const enemyElements = document.querySelectorAll('#enemy-row .card');
+      const userElements = document.querySelectorAll('#user-slots-row .card');
+
+      let currentTotal = 0;
+      let winCount = 0, drawCount = 0, loseCount = 0;
+
+      for (let i = 0; i < cardCount; i++) {
+        const uEl = userElements[i];
+        const eEl = enemyElements[i];
+        const outcome = checkOutcome(placedCards[i].type, enemyCards[i].type);
+
+        eEl.classList.add('clash');
+        uEl.classList.add('clash');
+        playCuteSound('pop');
+
+        await new Promise(resolve => setTimeout(resolve, 550));
+
+        if (outcome === 'win') {
+          playCuteSound('win');
+          currentTotal += winPts;
+          winCount++;
+          uEl.classList.add('win');
+          eEl.classList.add('lose');
+        } else if (outcome === 'lose') {
+          currentTotal += losePts;
+          loseCount++;
+          uEl.classList.add('lose');
+          eEl.classList.add('win');
+        } else {
+          currentTotal += drawPts;
+          drawCount++;
+          uEl.classList.add('draw');
+          eEl.classList.add('draw');
+        }
+
+        document.getElementById('total-score').textContent = `${currentTotal > 0 ? '+' : ''}${currentTotal}점`;
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+
+      const maxPossible = calculateMaxPossibleScore(winPts, drawPts, losePts);
+
+      document.getElementById('breakdown-text').textContent = 
+        `⭐ 이김: ${winCount}번 | 🤝 비김: ${drawCount}번 | 💔 짐: ${loseCount}번 (최고 점수: ${maxPossible > 0 ? '+' : ''}${maxPossible}점)`;
+
+      setTimeout(() => {
+        const modalTitle = document.getElementById('modal-title-text');
+        const modalScore = document.getElementById('modal-score-val');
+        const modalDesc = document.getElementById('modal-desc-text');
+        const modalRecord = document.getElementById('modal-record-text');
+
+        const scoreFormatted = `${currentTotal > 0 ? '+' : ''}${currentTotal}점`;
+        modalScore.textContent = scoreFormatted;
+        modalRecord.innerHTML = `⏱️ 걸린 시간: <strong>${secondsElapsed}초</strong> | 🎯 시도 횟수: <strong>${attemptsCount}번째</strong>`;
+
+        if (currentTotal >= maxPossible) {
+          hasClearedMax = true;
+          stopTimer(); // 최고점 성공 시 타이머 멈춤
+          playCuteSound('fanfare');
+          modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
+          modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
+        } else {
+          playCuteSound('win');
+          modalTitle.textContent = '🎈 대결 결과 🎈';
+          modalDesc.innerHTML = `⭐ 이김: ${winCount} | 🤝 비김: ${drawCount} | 💔 짐: ${loseCount}<br>(더 높은 <strong>${maxPossible > 0 ? '+' : ''}${maxPossible}점</strong>을 향해 카드를 다시 옮겨봐요!)`;
+        }
+
+        document.getElementById('result-modal').classList.add('active');
+      }, 400);
+
+      isPlaying = false;
+      document.getElementById('deal-btn').disabled = false;
+      renderSlots();
+      renderBasket();
+      checkPlayable();
+    }
+
+    function closeModal() {
+      playCuteSound('pop');
+      document.getElementById('result-modal').classList.remove('active');
+    }
+
+    window.onload = () => {
+      initSelectors();
+      dealCards();
+    };
+  </script>
+</body>
+</html>
