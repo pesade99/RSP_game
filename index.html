@@ -69,7 +69,7 @@
       50% { transform: translateY(-6px); }
     }
 
-    /* 타이머 & 시도 횟수 */
+    /* 타이머 & 시도 횟수 바 */
     .status-bar {
       display: flex;
       gap: 16px;
@@ -361,7 +361,7 @@
       box-shadow: 0 14px 28px rgba(0,0,0,0.25) !important;
     }
 
-    /* 바구니 영역 */
+    /* 바구니 */
     .basket-section {
       width: 100%;
       margin-top: 16px;
@@ -747,14 +747,14 @@
         const opt = document.createElement('option');
         opt.value = i;
         opt.textContent = `${i}장`;
-        if (i === 4) opt.selected = true; // 기본 4장
+        if (i === 4) opt.selected = true;
         countSel.appendChild(opt);
       }
 
       const scoreSelects = [
-        { id: 'win-score', defaultVal: 2 },  // 이기면 2점
-        { id: 'draw-score', defaultVal: 1 }, // 비기면 1점
-        { id: 'lose-score', defaultVal: 0 }  // 지면 0점
+        { id: 'win-score', defaultVal: 2 },
+        { id: 'draw-score', defaultVal: 1 },
+        { id: 'lose-score', defaultVal: 0 }
       ];
 
       scoreSelects.forEach(conf => {
@@ -1125,6 +1125,9 @@
       selectedSlotIndex = null;
       clearBattleVisuals();
 
+      // [핵심 수정] 대결 버튼을 누르고 애니메이션이 시작되는 즉시 타이머 정지
+      stopTimer();
+
       attemptsCount++;
       document.getElementById('attempt-display').textContent = `${attemptsCount}회`;
 
@@ -1141,6 +1144,7 @@
       let currentTotal = 0;
       let winCount = 0, drawCount = 0, loseCount = 0;
 
+      // 대결 애니메이션 진행
       for (let i = 0; i < cardCount; i++) {
         const uEl = userElements[i];
         const eEl = enemyElements[i];
@@ -1191,7 +1195,6 @@
 
         if (currentTotal >= maxPossible) {
           hasClearedMax = true;
-          stopTimer();
           playCuteSound('fanfare');
           modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
           modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
@@ -1214,6 +1217,10 @@
     function closeModal() {
       playCuteSound('pop');
       document.getElementById('result-modal').classList.remove('active');
+      // 최고점에 도달하지 못해 모달을 닫고 다시 배치할 때 타이머 다시 가동
+      if (!hasClearedMax && isProblemStarted) {
+        startTimer();
+      }
     }
 
     window.onload = () => {
