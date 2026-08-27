@@ -95,7 +95,7 @@
       text-align: center;
     }
 
-    /* 한 화면 핏 태블릿 그리드 레이아웃 */
+    /* 한 화면 핏 태블릿 레이아웃 */
     .tablet-layout {
       position: relative;
       z-index: 1;
@@ -109,7 +109,7 @@
       gap: 10px 14px;
     }
 
-    /* ⬅️ 왼쪽 상단 그룹: 타이머 + 설정 */
+    /* ⬅️ 왼쪽 상단 그룹: 타이머 + 하트 목숨 + 설정 */
     .left-top-group {
       grid-column: 1;
       grid-row: 1;
@@ -141,7 +141,13 @@
       align-items: center;
     }
     .status-pill.timer { color: #FA8231; border: 2px solid #FED330; }
-    .status-pill.attempts { color: #3867D6; border: 2px solid #45AAF2; }
+    .status-pill.hearts { color: #FF4757; border: 2px solid #FFA5B4; }
+
+    .hearts-display {
+      font-size: 20px;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 2px 3px rgba(255, 71, 87, 0.25));
+    }
 
     .settings-panel {
       background: #FFFFFF;
@@ -353,6 +359,7 @@
       transform: translateY(-6px) scale(1.05);
     }
 
+    /* 터치 중 화면을 따라다니는 클론 스타일 */
     .touch-dragging {
       position: fixed !important;
       z-index: 1000 !important;
@@ -360,9 +367,10 @@
       opacity: 0.85 !important;
       transform: scale(1.1) !important;
       box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+      transition: none !important;
     }
 
-    /* ⬇️ 바구니 영역 (우측 2행: 내 카드 주머니) */
+    /* ⬇️ 바구니 영역 (우측 2행) */
     .basket-section {
       grid-column: 2;
       grid-row: 2;
@@ -683,16 +691,16 @@
 
   <div class="tablet-layout">
     
-    <!-- ⬅️ 왼쪽 상단 그룹: 타이머 + 설정 -->
+    <!-- ⬅️ 왼쪽 상단 그룹: 타이머 + 하트 목숨 + 설정 -->
     <div class="left-top-group">
       <div class="status-panel">
         <div class="status-pill timer">
           <span>⏱️ 시간</span>
           <span id="timer-display">0초</span>
         </div>
-        <div class="status-pill attempts">
-          <span>🎯 시도 횟수</span>
-          <span id="attempt-display">0회</span>
+        <div class="status-pill hearts">
+          <span>❤️ 남은 기회</span>
+          <span class="hearts-display" id="hearts-display">❤️❤️❤️</span>
         </div>
       </div>
 
@@ -767,7 +775,7 @@
     <div class="modal-content" id="modal-content-box">
       <div class="modal-title" id="modal-title-text">와아! 대결 끝! 🎈</div>
       <div class="modal-score-display" id="modal-score-val">0점</div>
-      <div class="modal-record-box" id="modal-record-text">⏱️ 0초 | 🎯 1회 시도</div>
+      <div class="modal-record-box" id="modal-record-text">⏱️ 0초 | ❤️❤️❤️</div>
       <div class="modal-desc" id="modal-desc-text"></div>
       <button class="modal-btn" id="modal-action-btn" onclick="handleModalAction()">다시 해볼래! 🔄</button>
     </div>
@@ -788,14 +796,36 @@
     let isProblemStarted = false;
     let selectedSlotIndex = null;
 
-    let attemptsCount = 0;
+    // 하트 목숨 시스템 (기본 3개)
+    let lives = 3;
+    let isGameOver = false;
+
     let secondsElapsed = 0;
     let timerInterval = null;
     let hasClearedMax = false;
     let isTimerRunning = false;
 
+    // 터치 드래그 관리
     let touchDragData = null;
     let touchDragEl = null;
+
+    function renderHearts() {
+      let heartStr = '';
+      for (let i = 0; i < 3; i++) {
+        heartStr += (i < lives) ? '❤️' : '🖤';
+      }
+      document.getElementById('hearts-display').textContent = heartStr;
+    }
+
+    function cleanupAllTouchDragging() {
+      document.querySelectorAll('.touch-dragging').forEach(el => el.remove());
+      touchDragEl = null;
+      touchDragData = null;
+      document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+    }
+
+    window.addEventListener('touchend', cleanupAllTouchDragging);
+    window.addEventListener('touchcancel', cleanupAllTouchDragging);
 
     // 폭죽 엔진
     const canvas = document.getElementById('fireworks-canvas');
@@ -926,6 +956,14 @@
         gain.gain.linearRampToValueAtTime(0, now + 0.28);
         osc.start(now);
         osc.stop(now + 0.28);
+      } else if (type === 'lose') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.linearRampToValueAtTime(180, now + 0.25);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
       } else if (type === 'fanfare') {
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
           const o = audioCtx.createOscillator();
@@ -943,10 +981,10 @@
     }
 
     function startTimer() {
-      if (!isTimerRunning && !hasClearedMax) {
+      if (!isTimerRunning && !hasClearedMax && !isGameOver) {
         isTimerRunning = true;
         timerInterval = setInterval(() => {
-          if (!hasClearedMax) {
+          if (!hasClearedMax && !isGameOver) {
             secondsElapsed++;
             document.getElementById('timer-display').textContent = `${secondsElapsed}초`;
           }
@@ -1031,6 +1069,8 @@
 
         card.addEventListener('touchstart', (e) => {
           if (isPlaying) return;
+          cleanupAllTouchDragging();
+
           const touch = e.touches[0];
           touchDragData = { cardId: cardObj.id, fromSlot: fromSlotIndex };
           
@@ -1056,17 +1096,23 @@
           const touch = e.changedTouches[0];
           const targetSlot = getSlotUnderTouch(touch);
           
-          document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
-          if (targetSlot) {
-            const targetIdx = parseInt(targetSlot.dataset.slotIndex, 10);
-            handleDropToSlot(touchDragData, targetIdx);
-          }
+          const dataToDrop = touchDragData;
+          cleanupAllTouchDragging();
 
-          if (touchDragEl && touchDragEl.parentNode) {
-            touchDragEl.parentNode.removeChild(touchDragEl);
+          // [핵심 변경] 정확한 슬롯 위에 놓았을 때만 이동, 아니면 원래 위치로 안전 복귀
+          if (targetSlot && dataToDrop) {
+            const targetIdx = parseInt(targetSlot.dataset.slotIndex, 10);
+            handleDropToSlot(dataToDrop, targetIdx);
+          } else {
+            renderSlots();
+            renderBasket();
           }
-          touchDragEl = null;
-          touchDragData = null;
+        });
+
+        card.addEventListener('touchcancel', () => {
+          cleanupAllTouchDragging();
+          renderSlots();
+          renderBasket();
         });
       }
       return card;
@@ -1078,20 +1124,36 @@
       touchDragEl.style.top = `${touch.clientY - 42}px`;
     }
 
+    // 슬롯 영역의 중심부와 오차 범위(BoundingBox)를 정확히 판별하여 스냅
     function getSlotUnderTouch(touch) {
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      return el ? el.closest('.slot') : null;
+      const slots = document.querySelectorAll('#user-slots-row .slot');
+      for (const slot of slots) {
+        const rect = slot.getBoundingClientRect();
+        if (
+          touch.clientX >= rect.left - 10 &&
+          touch.clientX <= rect.right + 10 &&
+          touch.clientY >= rect.top - 10 &&
+          touch.clientY <= rect.bottom + 10
+        ) {
+          return slot;
+        }
+      }
+      return null;
     }
 
     function dealCards() {
+      cleanupAllTouchDragging();
       stopFireworks();
       playCuteSound('pop');
       isPlaying = false;
       isProblemStarted = false;
       hasClearedMax = false;
+      isGameOver = false;
       selectedSlotIndex = null;
-      attemptsCount = 0;
-      document.getElementById('attempt-display').textContent = '0회';
+      
+      // 하트 3개 리셋
+      lives = 3;
+      renderHearts();
       resetTimer();
 
       cardCount = parseInt(document.getElementById('card-count').value, 10);
@@ -1136,7 +1198,6 @@
       checkPlayable();
     }
 
-    // 카드 결과 효과 및 뱃지 초기화
     function clearBattleVisuals() {
       const allCards = document.querySelectorAll('.card');
       allCards.forEach(c => {
@@ -1305,7 +1366,7 @@
 
     function checkPlayable() {
       const allPlaced = placedCards.every(c => c !== null);
-      document.getElementById('play-btn').disabled = !allPlaced || !isProblemStarted || isPlaying;
+      document.getElementById('play-btn').disabled = !allPlaced || !isProblemStarted || isPlaying || isGameOver;
     }
 
     function checkOutcome(userType, enemyType) {
@@ -1355,9 +1416,6 @@
       clearBattleVisuals();
 
       stopTimer();
-
-      attemptsCount++;
-      document.getElementById('attempt-display').textContent = `${attemptsCount}회`;
 
       document.getElementById('deal-btn').disabled = true;
       document.getElementById('play-btn').disabled = true;
@@ -1419,24 +1477,44 @@
 
         const scoreFormatted = `${currentTotal > 0 ? '+' : ''}${currentTotal}점`;
         modalScore.textContent = scoreFormatted;
-        modalRecord.innerHTML = `⏱️ 걸린 시간: ${secondsElapsed}초 | 🎯 시도 횟수: ${attemptsCount}번째`;
 
         if (currentTotal >= maxPossible) {
           hasClearedMax = true;
+          isGameOver = false;
           playCuteSound('fanfare');
           launchCelebrationFireworks();
 
+          modalRecord.innerHTML = `⏱️ 걸린 시간: <strong>${secondsElapsed}초</strong> | 남은 기회: ${document.getElementById('hearts-display').textContent}`;
           modalTitle.textContent = '👑 와아! 최고 점수 달성! 👑';
-          modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에, <strong>${attemptsCount}번의 시도</strong>로<br>최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
+          modalDesc.innerHTML = `정말 대단해요!<br><strong>${secondsElapsed}초</strong> 만에 최고 점수 <strong>${scoreFormatted}</strong>를 완성했어요! 🌟`;
           modalBtn.textContent = '🎲 새로운 문제 뽑기';
           modalBtn.className = 'modal-btn new-game-btn';
         } else {
           hasClearedMax = false;
-          playCuteSound('win');
-          modalTitle.textContent = '🎈 대결 결과 🎈';
-          modalDesc.innerHTML = `⭐ 이김: ${winCount} | 🤝 비김: ${drawCount} | 💔 짐: ${loseCount}<br>(더 높은 <strong>${maxPossible > 0 ? '+' : ''}${maxPossible}점</strong>을 향해 카드를 다시 옮겨봐요!)`;
-          modalBtn.textContent = '🔄 다시 해볼래!';
-          modalBtn.className = 'modal-btn';
+          // [핵심 변경] 최고점 실패 시 하트 1개 차감
+          lives--;
+          renderHearts();
+
+          if (lives <= 0) {
+            // 하트 3개 모두 소진 -> 게임 오버
+            isGameOver = true;
+            playCuteSound('lose');
+            modalRecord.innerHTML = `⏱️ 기록: ${secondsElapsed}초 | 🖤🖤🖤 기회 소진`;
+            modalTitle.textContent = '😢 아쉬워요! 실패했어요';
+            modalTitle.style.color = '#747D8C';
+            modalDesc.innerHTML = `하트를 모두 잃었어요!<br>이번 문제의 최고점수는 <strong>${maxPossible > 0 ? '+' : ''}${maxPossible}점</strong>이었어요.<br>새로운 문제로 다시 힘내봐요! 💪`;
+            modalBtn.textContent = '🎲 새 문제 도전!';
+            modalBtn.className = 'modal-btn new-game-btn';
+          } else {
+            // 아직 하트가 남은 경우 -> 재도전 가능
+            playCuteSound('win');
+            modalRecord.innerHTML = `⏱️ 시간: ${secondsElapsed}초 | 남은 기회: ${document.getElementById('hearts-display').textContent}`;
+            modalTitle.textContent = '🎈 대결 결과 🎈';
+            modalTitle.style.color = '#FF6B8B';
+            modalDesc.innerHTML = `하트 1개를 잃었어요! (남은 기회: ${lives}번)<br>더 높은 <strong>${maxPossible > 0 ? '+' : ''}${maxPossible}점</strong>을 향해 카드를 다시 옮겨봐요!`;
+            modalBtn.textContent = '🔄 다시 해볼래!';
+            modalBtn.className = 'modal-btn';
+          }
         }
 
         document.getElementById('result-modal').classList.add('active');
@@ -1449,17 +1527,14 @@
       checkPlayable();
     }
 
-    // 모달 확인 버튼 처리 (다시 해볼래 클릭 시 카드 상태 초기화)
     function handleModalAction() {
       playCuteSound('pop');
       document.getElementById('result-modal').classList.remove('active');
 
-      if (hasClearedMax) {
+      if (hasClearedMax || isGameOver) {
         dealCards();
       } else {
-        // [수정 핵심] 곰돌이 및 내 카드에 붙은 이김/비김/짐 뱃지 및 색상 즉시 제거
         clearBattleVisuals();
-
         if (isProblemStarted) {
           startTimer();
         }
